@@ -1,7 +1,6 @@
 # coding=gbk
 import copy
 
-
 class Game:
     def __init__(self) -> None:
         self.direction = [-1, 1]  # -1逆时针，1顺时针
@@ -54,20 +53,16 @@ class Game:
         self.coordination[1] = [int(input("联动2.1: ")), int(input("联动2.2: "))]
         self.coordination[2] = [int(input("联动3.1: ")), int(input("联动3.2: "))]
         print("=====================================================================")
-        print(
-            f'==内圈 -> 初始：{self.disk[0]["init"]} -> 旋转方向：{self.get_direction(self.disk[0]["direction"])} -> 步长：{self.disk[0]["rotate"]}')
-        print(
-            f'==中圈 -> 初始：{self.disk[1]["init"]} -> 旋转方向：{self.get_direction(self.disk[1]["direction"])} -> 步长：{self.disk[1]["rotate"]}')
-        print(
-            f'==外圈 -> 初始：{self.disk[2]["init"]} -> 旋转方向：{self.get_direction(self.disk[2]["direction"])} -> 步长：{self.disk[2]["rotate"]}')
-        print(
-            f'==联动规则 -> 1.{self.get_rules(self.coordination[0])} -> 2.{self.get_rules(self.coordination[1])} -> 3.{self.get_rules(self.coordination[2])}')
+        print(f'==内圈 -> 初始：{self.disk[0]["init"]} -> 旋转方向：{self.get_direction(self.disk[0]["direction"])} -> 步长：{self.disk[0]["rotate"]}')
+        print(f'==中圈 -> 初始：{self.disk[1]["init"]} -> 旋转方向：{self.get_direction(self.disk[1]["direction"])} -> 步长：{self.disk[1]["rotate"]}')
+        print(f'==外圈 -> 初始：{self.disk[2]["init"]} -> 旋转方向：{self.get_direction(self.disk[2]["direction"])} -> 步长：{self.disk[2]["rotate"]}')
+        print(f'==联动规则 -> 1.{self.get_rules(self.coordination[0])} -> 2.{self.get_rules(self.coordination[1])} -> 3.{self.get_rules(self.coordination[2])}')
         print("=====================================================================")
-
+    
     @staticmethod
     def get_direction(num: int) -> str:
         return "逆时针" if num == -1 else "顺时针"
-
+    
     @staticmethod
     def get_rules(rule: list) -> str:
         def get_str(num: int) -> str:
@@ -75,10 +70,8 @@ class Game:
                 return "内圈"
             elif num == 1:
                 return "中圈"
-            elif num == 2:
-                return "外圈"
             else:
-                return "无"
+                return "外圈"
         return f'{get_str(rule[0])}<+>{get_str(rule[1])}'
 
     # 答案计算主程序
@@ -86,14 +79,22 @@ class Game:
         # 最终目标：三圈状态均为180
         # x, y, z 三个变量，分别对应三个联动规则所需次数
 
+        # 内圈旋转次数：exist(self.coordination[0], 0) * x + exist(self.coordination[1], 0) * y + exist(self.coordination[2], 0) * z
+        # 中圈旋转次数：exist(self.coordination[0], 1) * x + exist(self.coordination[1], 1) * y + exist(self.coordination[2], 1) * z
+        # 外圈旋转次数：exist(self.coordination[0], 2) * x + exist(self.coordination[1], 2) * y + exist(self.coordination[2], 2) * z
+        
+        # 内圈最终方程：
+        # exist(self.coordination[0], 0) * x + exist(self.coordination[1], 0) * y + exist(self.coordination[2], 0) * z = count(self.disk[0]["init"], self.disk[0]["direction"], self.disk[0]["rotate"])
+        # 中圈最终方程：
+        # exist(self.coordination[0], 1) * x + exist(self.coordination[1], 1) * y + exist(self.coordination[2], 1) * z = count(self.disk[1]["init"], self.disk[1]["direction"], self.disk[1]["rotate"])
+        # 外圈最终方程：
+        # exist(self.coordination[0], 2) * x + exist(self.coordination[1], 2) * y + exist(self.coordination[2], 2) * z = count(self.disk[2]["init"], self.disk[2]["direction"], self.disk[2]["rotate"])
+        
         # 用克拉默法则计算：
         # 左侧系数矩阵
-        raw = [[self.exist(self.coordination[0], 0), self.exist(self.coordination[1], 0),
-                self.exist(self.coordination[2], 0)],
-               [self.exist(self.coordination[0], 1), self.exist(self.coordination[1], 1),
-                self.exist(self.coordination[2], 1)],
-               [self.exist(self.coordination[0], 2), self.exist(self.coordination[1], 2),
-                self.exist(self.coordination[2], 2)]]
+        raw = [[self.exist(self.coordination[0], 0), self.exist(self.coordination[1], 0), self.exist(self.coordination[2], 0)],
+             [self.exist(self.coordination[0], 1), self.exist(self.coordination[1], 1), self.exist(self.coordination[2], 1)],
+             [self.exist(self.coordination[0], 2), self.exist(self.coordination[1], 2), self.exist(self.coordination[2], 2)]]
         # 右侧系数矩阵
         rep = [self.count(self.disk[0]["init"], self.disk[0]["direction"], self.disk[0]["rotate"]),
                self.count(self.disk[1]["init"], self.disk[1]["direction"], self.disk[1]["rotate"]),
@@ -128,7 +129,7 @@ class Game:
     @staticmethod
     def exist(index: list, num: int) -> int:
         return 1 if num in index else 0
-
+    
     # 计算到达180所需的次数
     @staticmethod
     def count(angle: int, direction: int, rotate: int) -> float:
@@ -139,24 +140,27 @@ class Game:
             else:
                 angle = angle - direction * rotate
                 b += 1
-
-    # 行列式计算
+    
+    # 行列式计算，输入矩阵matrix如：
+    # [[1,2,3],
+    #  [1,2,3],
+    #  [1,2,3]]
+    # 输入系数矩阵如:
+    # [a, b, c]
+    # index为替换x/y/z系数索引
     @staticmethod
-    def calculate(matrix_temp: list, replace = None, index: int = -1) -> int:
-        if replace is None:
-            replace = []
+    def calculate(matrix_temp: list, replace: list = [], index: int = -1) -> int:
         matrix = copy.deepcopy(matrix_temp)
         if index != -1:
             matrix[0][index], matrix[1][index], matrix[2][index] = replace[0], replace[1], replace[2]
         return \
-            matrix[0][0] * matrix[1][1] * matrix[2][2] + \
-            matrix[0][1] * matrix[1][2] * matrix[2][0] + \
-            matrix[0][2] * matrix[1][0] * matrix[2][1] - \
-            matrix[0][2] * matrix[1][1] * matrix[2][0] - \
-            matrix[0][1] * matrix[1][0] * matrix[2][2] - \
-            matrix[0][0] * matrix[1][2] * matrix[2][1]
+        matrix[0][0] * matrix[1][1] * matrix[2][2] + \
+        matrix[0][1] * matrix[1][2] * matrix[2][0] + \
+        matrix[0][2] * matrix[1][0] * matrix[2][1] - \
+        matrix[0][2] * matrix[1][1] * matrix[2][0] - \
+        matrix[0][1] * matrix[1][0] * matrix[2][2] - \
+        matrix[0][0] * matrix[1][2] * matrix[2][1]
 
 
 game = Game()
 game.cal()
-
